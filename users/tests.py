@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from .models import User
 
+# this test case will test the user registration API endpoint and check if the user is created successfully with the correct data.
 class UserAuthTests(APITestCase):
     def test_user_registration(self):
         data = {

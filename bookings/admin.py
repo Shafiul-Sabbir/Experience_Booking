@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import Booking
-# Register your models here.
 
 class BookingAdmin(admin.ModelAdmin):
     list_display = ('id', 'customer', 'slot', 'status', 'booked_at',)

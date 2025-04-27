@@ -3,7 +3,9 @@ from django.urls import reverse
 from users.models import User
 from .models import Experience
 
+# Test case for provider user authentication and experience creation
 class ExperienceTests(APITestCase):
+    # Set up the test case with a provider user
     def setUp(self):
         self.provider = User.objects.create_user(
             username='provider1',
@@ -12,6 +14,7 @@ class ExperienceTests(APITestCase):
         )
         self.client.force_authenticate(user=self.provider)
 
+    # Test case for creating an experience
     def test_create_experience(self):
         data = {
             "title": "Sundarban Trip",

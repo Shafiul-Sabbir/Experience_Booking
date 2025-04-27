@@ -10,6 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
+# Utility function to generate JWT tokens for a user
+# This function will be used to generate JWT tokens for the test users
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -18,15 +20,15 @@ def get_tokens_for_user(user):
     }
 
 class BookingAPITestCase(TestCase):
-
+    # This test case will test the booking API endpoints
     def setUp(self):
         self.client = APIClient()
-
         self.customer = User.objects.create_user(username='customer1', password='testpass', role='customer')
-        self.guide = User.objects.create_user(username='guide1', password='testpass', role='guide')
+        self.provider = User.objects.create_user(username='guide1', password='testpass', role='provider')
 
+        # Create an experience for the provider
         self.experience = Experience.objects.create(
-            provider=self.guide,
+            provider=self.provider,
             title='Test Experience',
             description='A great experience',
             start_date=date(2025, 5, 1),
@@ -34,6 +36,7 @@ class BookingAPITestCase(TestCase):
             capacity=5
         )
 
+        # Create an availability slot for the experience
         self.slot = AvailabilitySlot.objects.create(
             experience=self.experience,
             date=date(2025, 5, 1),
@@ -45,15 +48,16 @@ class BookingAPITestCase(TestCase):
 
         # JWT Tokens
         self.customer_tokens = get_tokens_for_user(self.customer)
-        self.guide_tokens = get_tokens_for_user(self.guide)
+        self.provider_tokens = get_tokens_for_user(self.provider)
 
         self.customer_auth_header = {
             'HTTP_AUTHORIZATION': f'Bearer {self.customer_tokens["access"]}'
         }
-        self.guide_auth_header = {
-            'HTTP_AUTHORIZATION': f'Bearer {self.guide_tokens["access"]}'
+        self.provider_auth_header = {
+            'HTTP_AUTHORIZATION': f'Bearer {self.provider_tokens["access"]}'
         }
 
+    # test customer can create booking
     def test_customer_can_create_booking(self):
         response = self.client.post(
             self.booking_url,
@@ -64,15 +68,17 @@ class BookingAPITestCase(TestCase):
         self.assertEqual(Booking.objects.count(), 1)
         self.assertEqual(Booking.objects.first().customer, self.customer)
 
-    def test_guide_cannot_create_booking(self):
+    # test provider cannot create booking
+    def test_provider_cannot_create_booking(self):
         response = self.client.post(
             self.booking_url,
             {'slot': self.slot.id},
-            **self.guide_auth_header
+            **self.provider_auth_header
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Booking.objects.count(), 0)
 
+    # test customer can delete their own booking
     def test_customer_can_delete_own_booking(self):
         booking = Booking.objects.create(customer=self.customer, slot=self.slot)
         delete_url = reverse('booking-delete', kwargs={'pk': booking.pk})
@@ -80,6 +86,7 @@ class BookingAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Booking.objects.count(), 0)
 
+    # checking overbooking
     def test_booking_fails_when_slot_full(self):
         self.slot.booked_count = 2
         self.slot.save()

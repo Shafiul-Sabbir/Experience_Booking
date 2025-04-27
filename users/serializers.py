@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 
+# This serializer is used to handle user registration
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -8,6 +9,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'password', 'role']
 
+    # This method is called when creating a new user
     def create(self, validated_data):
         user = User.objects.create_user(
             username = validated_data['username'],

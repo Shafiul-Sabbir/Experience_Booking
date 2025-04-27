@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+# Role based user model
+# This model extends the default Django user model to include a role field.
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('provider', 'Provider'),
